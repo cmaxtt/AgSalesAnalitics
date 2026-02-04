@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Pastel Palette */
+  --color-primary: #E0BBE4; /* Lavender */
+  --color-primary-dark: #cd9bc4;
+  --color-secondary: #D2F5E3; /* Mint */
+  --color-accent: #FFDFD3; /* Peach */
+  --color-blue-soft: #d3e1ff; /* Periwinkle */
+  
+  /* Text & Structure */
+  --color-text: #4A4A4A;
+  --color-text-light: #7a7a7a;
+  --color-bg: #FDFBF7;
+  --color-white: #FFFFFF;
+  
+  /* UI Elements */
+  --radius-card: 24px;
+  --radius-button: 12px;
+  --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.08);
+  --shadow-hover: 0 15px 50px -10px rgba(0,0,0,0.12);
+  
+  --font-main: 'Inter', system-ui, sans-serif;
+  
+  --transition-fast: 0.2s ease;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+p {
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+* {
+  box-sizing: border-box;
+}
