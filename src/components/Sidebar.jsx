@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Database, PieChart } from 'lucide-react';
+import { LayoutDashboard, Database, PieChart, Users } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ currentView, onNavigate }) => {
@@ -24,6 +24,13 @@ const Sidebar = ({ currentView, onNavigate }) => {
                 >
                     <PieChart className="nav-icon" />
                     <span>Vendor Analysis</span>
+                </div>
+                <div
+                    className={`nav-item ${currentView === 'cashier' ? 'active' : ''}`}
+                    onClick={() => onNavigate('cashier')}
+                >
+                    <Users className="nav-icon" />
+                    <span>Cashier Analysis</span>
                 </div>
             </div>
 

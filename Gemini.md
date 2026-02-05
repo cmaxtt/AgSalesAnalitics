@@ -1,89 +1,69 @@
 # Project Analysis: AgSalesAnalitics
 
 ## 1. Executive Summary
-**AgSalesAnalitics** is a modern, full-stack web application designed for visualizing and analyzing sales data. 
-It features a **Vite + React** frontend for a responsive user interface and a **Node.js + Express** backend that connects to a local **Microsoft SQL Server (MSSQL)** database.
-The application currently includes AI-powered summarization capabilities using OpenAI and DeepSeek models.
+**AgSalesAnalitics** is a premium, full-stack business intelligence dashboard for visualizing and analyzing sales performance. 
+It features a **Vite + React** frontend with a neon-dark aesthetic and a **Node.js + Express** backend that integrates with **Microsoft SQL Server (MSSQL)**. 
+The core value proposition is the **AI-Intelligence Report**, which provides automated executive summaries of vendor performance using advanced LLMs (Gemini, DeepSeek, or OpenAI).
 
 ## 2. Technology Stack
 
 ### Frontend
-- **Framework:** React 18 (via Vite)
-- **Visualization:** Recharts (for sales charts/graphs)
-- **Icons:** Lucide-React
-- **Animations:** Framer Motion
-- **Language:** JavaScript (ES Modules)
+- **Framework:** React 19 (via Vite)
+- **Styling:** Vanilla CSS with a Dark/Neon Green theme (`#0b1215`, `#4ade80`).
+- **Icons:** `lucide-react` (for UI elements and AI branding).
+- **UX Features:** 
+  - Dynamic View Switching (Overview vs. Vendor Analysis).
+  - Date Range Filtering (Defaults to 1st of previous month to today).
+  - One-click Exports (Excel/CSV and PDF/Print).
+  - Database Connection Settings Modal.
 
 ### Backend (`/server`)
 - **Runtime:** Node.js
 - **Framework:** Express.js
 - **Database Driver:** `mssql` (Microsoft SQL Server)
-- **AI Client:** `openai` (Official Node.js library)
-- **Environment Management:** `dotenv`
+- **Persistence:** Local JSON configuration (`db_config.json`) for persistent database credentials.
+- **AI Clients:** 
+  - `@google/generative-ai` (Gemini 1.5 Flash - Primary).
+  - `openai` (DeepSeek and GPT-4o fallback).
+- **Security:** `helmet` for headers, `cors` for safe cross-origin requests, `express-rate-limit` for DDoS protection.
 
-## 3. Current Architecture
+## 3. Core Features & Implementation Details
 
-### Data Flow
-1.  **Frontend** requests data from the Backend API (e.g., `/api/connect`, `/api/analyze`).
-2.  **Backend** connects to the MSSQL database using credentials provided in the request or environment.
-3.  **Backend** executes SQL queries (currently fetching `TOP 100` rows for analysis).
-4.  **Backend** sends a sample of this data (first 50 rows) to an LLM (Large Language Model) to generate a textual summary.
-5.  **Frontend** receives both the raw data (for charts) and the AI summary (for insights) to display to the user.
+### A. Vendor Revenue Analysis
+A specialized dashboard providing deep insights into vendor-specific metrics:
+- **Metrics Cloud:** Total Revenue, Gross Profit, Total Volume, and Avg Margin.
+- **Data Table:** Dynamic sorting (default: Gross Profit Descending), precise header alignment, and currency formatting.
+- **Date Range Picker:** Allows custom analysis periods with a rapid "Reset" function.
 
-### Current AI Implementation
-The backend currently supports two AI providers via the `openai` SDK:
--   **DeepSeek:** Enabled if `DEEPSEEK_API_KEY` is present. Uses `deepseek-reasoner` model via `https://api.deepseek.com`.
--   **OpenAI:** Fallback if `OPENAI_API_KEY` is present. Uses `gpt-4o` (or similar).
+### B. AI-Intelligence Report
+Automated business analysis pipeline:
+1. **Extraction:** Backend executes a complex SQL query calculating Net Revenue, Cost, and Margin with discount handling.
+2. **Contextualization:** Data for the top 15 vendors is packaged into a structured prompt.
+3. **Reasoning:** AI generates 3 key insights and a professional recommendation.
+4. **Presentation:** Visualized in a stylized, glassmorphism-inspired container with glowing accents.
 
-## 4. Proposed Gemini Integration
-To enhance the application with Google's Gemini models (which often offer larger context windows and lower latency for this type of task), we can integrate the **Google Generative AI SDK**.
+### C. Persistent Database Connectivity
+The application follows a "Connect Once" philosophy:
+- **Settings Modal:** Users input server, database, user, and password.
+- **Validation:** Connectivity is verified via a test query before saving.
+- **Persistence:** Credentials are saved to `server/db_config.json` (git-ignored for security).
+- **Auto-Connect:** On backend startup, the server automatically attempts to re-establish the link.
 
-### Recommended Changes
+## 4. Database Schema Requirements
+The application expects the following core MSSQL structure:
+- **`tblVendors`**: `VendorID`, `VendorName`.
+- **`tblInvoices`**: `InvoiceID`, `InvoiceDate`.
+- **`tblInvoiceDetails`**: `InvoiceID`, `VendorID`, `Quantity`, `PricePerUnit`, `CostPerUnit`, `ItemDiscountValue`.
 
-1.  **Install Dependency:**
-    ```bash
-    cd server
-    npm install @google/generative-ai
-    ```
+## 5. Security Best Practices
+- **Credential Protection:** `db_config.json` and `.env` are strictly excluded via `.gitignore`.
+- **Query Precision:** SQL calculations use `ISNULL` for discount safety and `CAST` for margin precision to avoid division-by-zero errors.
+- **Print Optimization:** Custom `@media print` styles ensure professional PDF exports by hiding navigation and system controls.
 
-2.  **Update `server/index.js`:**
-    Modify the `getLLMClient` (or equivalent logic) to check for a `GEMINI_API_KEY`.
-
-    ```javascript
-    // Import Google GenAI
-    const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-    // Inside getLLMClient or a new handler
-    if (process.env.GEMINI_API_KEY) {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        
-        // ... generation logic using model.generateContent()
-    }
-    ```
-
-3.  **Environment Variable:**
-    Add `GEMINI_API_KEY` to `server/.env`.
-
-### Benefits of Gemini Integration
--   **Cost/Performance:** Gemini 1.5 Flash is extremely fast and cost-effective for summarization tasks.
--   **Context Window:** Gemini's massive context window allows sending *all* retrieved rows (not just the first 50) for a more accurate comprehensive summary.
-
-## 5. Code Quality & Security Analysis
-
-### Security
--   **SQL Injection:** The current implementation of `SELECT TOP 100 * FROM ${table}` in `server/index.js` is vulnerable to SQL injection. While acceptable for a local prototype, it must be parameterized or validated against a schema for production.
--   **API Keys:** Keys are correctly managed via `dotenv`, preventing accidental commit to version control (assuming `.env` is git-ignored).
-
-### Best Practices
--   **Frontend:** The React structure simulates a clean component hierarchy. State management is simple (prop drilling), which is appropriate for this scale.
--   **Backend:** Routes are clear. The AI integration logic is modularized in `getLLMClient`.
-
-## 6. Next Steps
-1.  [ ] Install `@google/generative-ai` in the server directory.
-2.  [ ] Refactor `server/index.js` to support the Gemini client alongside OpenAI/DeepSeek.
-3.  [ ] Update the frontend to potentially allow switching between models (optional).
-4.  [ ] Add error handling specific to Google's API.
+## 6. How to Run
+1. **Install Dependencies:** `npm install` in root and `server` folders.
+2. **Environment:** Create `server/.env` with `GEMINI_API_KEY`.
+3. **Execution:** Use `npm run dev` to start the Frontend (5151), Backend (3030), and MSSQL MCP Server concurrently.
 
 ---
-*Analysis generated by Antigravity*
+*Document updated on 2026-02-05*

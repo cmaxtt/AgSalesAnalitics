@@ -7,68 +7,55 @@ A modern, interactive Sales Analytics web application designed to connect to SQL
 - **Interactive UI**: Built with React and Vite for a fast, responsive user experience.
 - **SQL Server Integration**: Connects to local or remote SQL Server instances to fetch real-time sales data.
 - **AI-Powered Summaries**: Integrates with OpenAI or DeepSeek to generate concise, professional executive summaries from your datasets.
-- **Visual Dashboards**: (Future enhancement) Beautiful charts and dashboards to visualize sales trends.
-- **Security**: Environment variable support for sensitive API keys and database credentials.
+- **Vendor Range Analysis**: Detailed revenue and profit tracking by vendor with date filters.
+- **Cashier Flash Report**: A dual-interface feature providing:
+  - **Web Dashboard**: Real-time KPI cards (Sales, Transactions, Margin, ATV) and performance tables.
+  - **CLI Tool**: A standalone Python application for advanced analytics and CSV/JSON exports.
+- **AI-Powered Summaries**: Integrates with Gemini, DeepSeek, or OpenAI to generate concise performance insights.
+- **Persistent Settings**: Remembers your database connection strings and credentials for seamless sessions.
 
-## Technology Stack
+## Project Structure
 
-- **Frontend**: React, Vite, Recharts, Framer Motion, Lucide React.
-- **Backend**: Node.js, Express, MSSQL (tedious), OpenAI SDK.
-- **Aesthetics**: Custom Vanilla CSS with a modern, pastel/glassmorphism theme.
+- `/src`: React frontend components and assets.
+- `/server`: Node.js backend handling SQL Server logic and AI integration.
+- `/cashier_cli`: Standalone Python CLI tool for sales reports.
+- `Start_AgSales.bat`: One-click startup script for Windows.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- SQL Server 2022 (Local or Remote)
-- (Optional) OpenAI or DeepSeek API Key for AI summaries.
+- **Node.js**: (v18 or higher)
+- **Python 3.x**: For the CLI tool.
+- **SQL Server**: Access to a local or remote instance.
 
-### Installation
+### Installation & Quick Start (Windows)
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/cmaxtt/AgSalesAnalitics.git
    cd AgSalesAnalitics
    ```
+2. **One-Click Startup**: Simply double-click `Start_AgSales.bat` in the root directory. This will automatically start the frontend, backend, and database connection.
+3. Open `http://localhost:5151` in your browser.
 
-2. Install dependencies for the frontend:
-   ```bash
-   npm install
-   ```
+### Manual Setup
 
-3. Install dependencies for the backend:
-   ```bash
-   cd server
-   npm install
-   cd ..
-   ```
+1. **Frontend**: Run `npm install` and `npm run dev` in the root.
+2. **Backend**: Run `npm install` and `node index.js` inside the `server` directory.
+3. **CLI Tool**: Run `pip install -r cashier_cli/requirements.txt`.
 
-### Configuration
+## Usage - Cashier Flash Report
 
-Create a `.env` file in the `server` directory:
+### Web Dashboard
+- Navigate to **Cashier Analysis** in the sidebar.
+- Select a date range and click **Run Analysis** to see live KPIs and AI summaries.
 
-```env
-OPENAI_API_KEY=your_openai_key
-# OR
-DEEPSEEK_API_KEY=your_deepseek_key
+### CLI Tool
+Run the python tool for manual reports:
+```bash
+python cashier_cli/cli_app.py --db-connection "YOUR_CONNECTION_STRING" --date-range "YYYY-MM-DD to YYYY-MM-DD"
 ```
-
-### Running the App
-
-1. Start the backend server:
-   ```bash
-   cd server
-   npm run dev
-   ```
-
-2. Start the frontend development server:
-   ```bash
-   # From the root directory
-   npm run dev
-   ```
-
-3. Open your browser and navigate to `http://localhost:5151`.
 
 ## License
 
