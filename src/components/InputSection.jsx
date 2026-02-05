@@ -6,9 +6,11 @@ import './InputSection.css';
 const InputSection = ({ onAnalyze }) => {
     const [method, setMethod] = useState('sql'); // sql or file
     const [config, setConfig] = useState({
-        server: 'localhost',
-        database: 'SalesDB',
-        table: 'Sales',
+        server: 'HPWIN11',
+        database: 'PVSQLDBN',
+        user: 'sa',
+        password: 'pass@word123',
+        table: 'dbo.Sales',
         file: null
     });
 
@@ -41,7 +43,7 @@ const InputSection = ({ onAnalyze }) => {
                     alert('Connection Failed: ' + data.error);
                 }
             } catch (err) {
-                alert('Server Error. Ensure backend is running directly on port 3000.');
+                alert('Server Error. Ensure backend is running directly on port 3030.');
             }
         } else {
             // File mode simulation remains for now
@@ -94,6 +96,28 @@ const InputSection = ({ onAnalyze }) => {
                                     value={config.database}
                                     onChange={handleInputChange}
                                     placeholder="e.g. SalesDB"
+                                    required
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>User</label>
+                                <input
+                                    type="text"
+                                    name="user"
+                                    value={config.user}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g. sa"
+                                    required
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={config.password}
+                                    onChange={handleInputChange}
+                                    placeholder="*****"
                                     required
                                 />
                             </div>

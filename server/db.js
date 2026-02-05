@@ -9,7 +9,6 @@ const connectDB = async (config) => {
             await pool.close();
         }
 
-        // Config object mapping
         const sqlConfig = {
             user: config.user,
             password: config.password,
@@ -21,10 +20,25 @@ const connectDB = async (config) => {
                 idleTimeoutMillis: 30000
             },
             options: {
-                encrypt: false, // For local dev often false; true for Azure
-                trustServerCertificate: true // Self-signed certs
+                encrypt: false,
+                trustServerCertificate: true,
+                enableArithAbort: true
             }
         };
+
+        // If localhost, force 127.0.0.1 to avoid TCP/Named Pipes ambiguity
+        if (sqlConfig.server === 'localhost') {
+            sqlConfig.server = '127.0.0.1';
+        }
+
+        // Add correct port logic:
+        // If it's a named instance (HAS BACKSLASH), DO NOT SET PORT. Let SQL Browser handle it.
+        // If it's a standard IP or localhost, DEFAULT TO 1433 if not specified.
+        if (!sqlConfig.server.includes('\\')) {
+            sqlConfig.port = 1433;
+        }
+
+        console.log(`Connecting to: ${sqlConfig.server} (${sqlConfig.port ? sqlConfig.port : 'Dynamic Port'}) User: ${sqlConfig.user}`);
 
         pool = await sql.connect(sqlConfig);
         console.log('Connected to MSSQL');

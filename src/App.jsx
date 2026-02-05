@@ -24,27 +24,20 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: config.table })
       });
+
       const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'Analysis failed');
+      }
+
       setAnalysisResult(result);
-
-      // Pass result to dashboard (via state - simplistic approach for now)
-      // In a real app complexity, we'd use a context or Redux.
-      // For this prototype, we'll simulated the response being "ready" and 
-      // just pass the raw row count or data to the dashboard if we could.
-      // For now, we still rely on the simulated delay for the UX "effect" 
-      // but we wait for the fetch first.
-
-      setTimeout(() => {
-        setAppState('results');
-      }, 2500); // Keep some animation time
+      setAppState('results'); // Immediate transition
 
     } catch (err) {
       console.error("Analysis failed", err);
-      // Fallback to simulation so the user still sees something if backend fails
-      setAnalysisResult(null);
-      setTimeout(() => {
-        setAppState('results');
-      }, 3500);
+      alert(`Analysis Failed: ${err.message}`);
+      setAppState('input'); // Go back to input on error
     }
   };
 
