@@ -1,0 +1,124 @@
+.settings-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.settings-modal {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    width: 400px;
+    max-width: 90%;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    color: var(--color-accent-blue);
+    margin: 0;
+}
+
+.close-btn {
+    color: var(--color-text-muted);
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--color-text-main);
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    color: var(--color-text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--color-accent-blue);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-sm);
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-main);
+}
+
+.btn-primary {
+    background-color: var(--color-accent-blue);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.status-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.status-error {
+    background-color: rgba(255, 46, 99, 0.1);
+    color: var(--color-accent-pink);
+    border: 1px solid rgba(255, 46, 99, 0.2);
+}
+
+.status-success {
+    background-color: rgba(0, 255, 157, 0.1);
+    color: var(--color-accent-green);
+    border: 1px solid rgba(0, 255, 157, 0.2);
+}

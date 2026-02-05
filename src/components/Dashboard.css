@@ -1,0 +1,121 @@
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+}
+
+/* Top Bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.brand-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-accent-cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.2);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--color-accent-green);
+}
+
+.settings-btn {
+    color: var(--color-text-main);
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.settings-btn:hover {
+    opacity: 1;
+}
+
+
+/* Section Header */
+.section-header h1 {
+    font-size: 1.75rem;
+    color: var(--color-accent-cyan);
+    margin-bottom: 1.5rem;
+}
+
+/* Controls */
+.controls-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.date-input-wrapper {
+    position: relative;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 160px;
+}
+
+.date-input-wrapper span {
+    flex: 1;
+    font-size: 0.95rem;
+}
+
+.run-report-btn {
+    background-color: var(--color-accent-cyan);
+    color: #000;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-sm);
+    transition: transform 0.1s;
+}
+
+.run-report-btn:active {
+    transform: scale(0.98);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}

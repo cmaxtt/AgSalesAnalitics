@@ -1,25 +1,13 @@
 .app-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--color-bg-dark);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: 100vh;
 }

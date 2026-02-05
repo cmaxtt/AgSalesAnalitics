@@ -1,0 +1,208 @@
+.vendor-dashboard {
+    padding: 2rem;
+    background-color: #0b1215;
+    /* Deep dark background */
+    color: #e0e0e0;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.vd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(74, 222, 128, 0.2);
+    padding-bottom: 1rem;
+}
+
+.vd-title h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f0fdf4;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.vd-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.vd-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.vd-control-group label {
+    font-size: 0.8rem;
+    color: #86efac;
+    /* Light green text */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vd-date-input {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.vd-date-input:focus {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+}
+
+.vd-run-btn {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    height: 42px;
+    /* Accessibly sized */
+}
+
+.vd-run-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.vd-run-btn:active {
+    transform: translateY(0);
+}
+
+/* Metric Cards */
+.vd-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.vd-stat-card {
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(74, 222, 128, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.vd-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4ade80, transparent);
+    opacity: 0.5;
+}
+
+.vd-stat-title {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.vd-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.vd-stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.vd-trend-up {
+    color: #4ade80;
+}
+
+/* AI Report Section */
+.vd-ai-section {
+    background: linear-gradient(180deg, rgba(20, 83, 45, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.vd-ai-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.vd-ai-icon {
+    color: #4ade80;
+}
+
+.vd-ai-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #d1d5db;
+    white-space: pre-line;
+}
+
+/* Data Table */
+.vd-table-container {
+    background: rgba(17, 24, 39, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.vd-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vd-table th {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #9ca3af;
+    font-weight: 500;
+    text-align: left;
+    padding: 1rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vd-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    font-size: 0.9rem;
+    color: #e5e7eb;
+}
+
+.vd-table tr:hover {
+    background-color: rgba(74, 222, 128, 0.05);
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-green {
+    color: #4ade80;
+}
+
+.text-white {
+    color: white;
+}

@@ -25,3 +25,4 @@ dist-ssr
 .env
 
 server/connect_test.json
+server/db_config.json
