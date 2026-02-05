@@ -162,7 +162,7 @@ app.post('/api/reports/vendor-revenue', async (req, res) => {
             INNER JOIN tblVendors v ON d.VendorID = v.VendorID
             WHERE i.InvoiceDate >= @startDate AND i.InvoiceDate <= @endDate
             GROUP BY v.VendorName
-            ORDER BY NetRevenue DESC
+            ORDER BY GrossProfit DESC
         `;
 
         const request = pool.request();
