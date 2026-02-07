@@ -7,6 +7,7 @@ require('dotenv').config();
 const OpenAI = require('openai');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { validateTable } = require('./utils/validation');
+const { domainContext } = require('./utils/domainContext');
 
 const app = express();
 const PORT = 3030;
@@ -115,6 +116,130 @@ app.post('/api/connect', async (req, res) => {
     }
 });
 
+// Helper to fetch database schema context
+const getSchemaContext = async (pool) => {
+    try {
+        const result = await pool.request().query(`
+            SELECT 
+                t.name AS TableName,
+                c.name AS ColumnName,
+                ty.name AS DataType
+            FROM sys.tables t
+            INNER JOIN sys.columns c ON t.object_id = c.object_id
+            INNER JOIN sys.types ty ON c.user_type_id = ty.user_type_id
+            WHERE t.name NOT LIKE 'sys%'
+            ORDER BY t.name, c.column_id
+        `);
+
+        let schema = {};
+        result.recordset.forEach(row => {
+            if (!schema[row.TableName]) schema[row.TableName] = [];
+            schema[row.TableName].push(`${row.ColumnName} (${row.DataType})`);
+        });
+
+        return Object.entries(schema).map(([table, cols]) =>
+            `Table: ${table}\nColumns: ${cols.join(', ')}`
+        ).join('\n\n');
+    } catch (err) {
+        console.error("Error fetching schema:", err);
+        return "";
+    }
+};
+
+// Chat Query Endpoint
+app.post('/api/chat/query', async (req, res) => {
+    const { userPrompt } = req.body;
+
+    if (!userPrompt) {
+        return res.status(400).json({ error: 'User prompt is required' });
+    }
+
+    const pool = getPool();
+    if (!pool) return res.status(500).json({ error: 'Not connected to database.' });
+
+    try {
+        // 1. Get Schema Context
+        const schemaContext = await getSchemaContext(pool);
+
+        // 2. Prepare LLM Request
+        const llmConfig = getLLMClient();
+        if (!llmConfig) {
+            return res.status(500).json({ error: 'LLM Client not configured.' });
+        }
+
+        const systemPrompt = `You are an expert SQL Data Analyst. Your task is to convert natural language queries into MSSQL T-SQL queries based on the provided schema and domain rules.
+        
+        Rules:
+        1. return ONLY a JSON object with this format: { "sql": "SELECT ...", "explanation": "..." }
+        2. Create ONLY SELECT statements. No INSERT, UPDATE, DELETE, DROP.
+        3. Use standard T-SQL syntax.
+        4. Handle date formatting and grouping as requested.
+        5. If the request cannot be answered with the schema, return { "error": "Reason..." }
+        6. Do not include markdown formatting (like \`\`\`json) in the response.
+
+        ${domainContext}
+        
+        Database Schema:
+        ${schemaContext}`;
+
+        let generatedResponse = "";
+
+        if (llmConfig.provider === 'Gemini') {
+            const model = llmConfig.client.getGenerativeModel({ model: llmConfig.model });
+            const result = await model.generateContent(systemPrompt + "\nUser Request: " + userPrompt);
+            generatedResponse = result.response.text();
+        } else {
+            const completion = await llmConfig.client.chat.completions.create({
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                model: llmConfig.model,
+            });
+            generatedResponse = completion.choices[0].message.content;
+        }
+
+        // Clean response if it contains markdown code blocks
+        generatedResponse = generatedResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(generatedResponse);
+        } catch (e) {
+            return res.status(500).json({ error: 'Failed to parse AI response', raw: generatedResponse });
+        }
+
+        if (parsedResponse.error) {
+            return res.status(400).json({ error: parsedResponse.error });
+        }
+
+        // 3. Security Validation
+        const sqlQuery = parsedResponse.sql;
+        const forbiddenKeywords = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'TRUNCATE', 'EXEC', 'MERGE'];
+        const upperSql = sqlQuery.toUpperCase();
+
+        if (forbiddenKeywords.some(kw => upperSql.includes(kw))) {
+            return res.status(403).json({ error: 'Generated query contains unsafe operations.' });
+        }
+
+        // 4. Execute Query
+        console.log("Executing Generated Query:", sqlQuery);
+        const request = pool.request();
+        const result = await request.query(sqlQuery);
+
+        res.json({
+            success: true,
+            sql: sqlQuery,
+            explanation: parsedResponse.explanation,
+            data: result.recordset
+        });
+
+    } catch (err) {
+        console.error("Chat Query Error:", err);
+        res.status(500).json({ error: 'Query Execution Failed', details: err.message });
+    }
+});
+
 // Endpoint to check connection status
 app.get('/api/connection-status', (req, res) => {
     const pool = getPool();
@@ -191,14 +316,40 @@ app.post('/api/reports/vendor-revenue', async (req, res) => {
                     profit: acc.profit + curr.GrossProfit
                 }), { revenue: 0, profit: 0 });
 
-                const systemPrompt = "You are a specialized business intelligence analyst for AgSalesAnalytics. " +
-                    "Your goal is to provide a concise, high-impact executive summary of the vendor performance data. " +
-                    "Focus on revenue drivers, profit leaders, and margin anomalies. Use professional formatting.";
+                const systemPrompt = "You are a senior Operations Analyst. Format your response using specific Markdown patterns as requested.";
+                const userPrompt = `Analyze vendor sales data (${startDate} to ${endDate}).
+Total Revenue: $${totals.revenue.toFixed(2)}, Profit: $${totals.profit.toFixed(2)}.
+Top Vendors: ${JSON.stringify(topVendors)}.
 
-                const userPrompt = `Analyze the following vendor sales data from ${startDate} to ${endDate}. \n` +
-                    `Total Period Revenue: $${totals.revenue.toFixed(2)}, Total Profit: $${totals.profit.toFixed(2)}. \n` +
-                    `Top Vendor Data: ${JSON.stringify(topVendors)}. \n` +
-                    `Provide 3 key insights and a concluding recommendation.`;
+STRICTLY usage the following Markdown format:
+
+### 🔹 High-Performing Vendors
+**[VENDOR NAME]**
+- Revenue: **$[AMOUNT]**
+- Profit: **$[AMOUNT]**
+- Margin: **[PERCENT]%**
+- Notes: [Brief insight]
+
+(Repeat for top 2-3 vendors)
+
+---
+
+### 🔹 Margin Analysis & Flags
+| Vendor | Margin (%) | Flag |
+| :--- | :--- | :--- |
+| [Name] | [Value] | ✅ Healthy / ⚠️ Low |
+(List top 5)
+
+---
+
+### 🔹 Suggested Strategy
+**Goal:** [One sentence goal]
+
+**Action Plan:**
+1. **[Action Item]** - [Description]
+2. **[Action Item]** - [Description]
+
+> ✅ [Closing positive note]`;
 
                 if (llmConfig.provider === 'Gemini') {
                     const model = llmConfig.client.getGenerativeModel({ model: llmConfig.model });
@@ -297,11 +448,43 @@ app.post('/api/reports/cashier-flash', async (req, res) => {
                     trans: acc.trans + curr.Trans
                 }), { sales: 0, cost: 0, trans: 0 });
 
-                const systemPrompt = "You are a senior Operations Analyst. Analyze this Cashier Flash Report.";
-                const userPrompt = `Data Period: ${startDate} to ${endDate}. \n` +
-                    `Total Sales: $${totals.sales.toFixed(2)}, Transactions: ${totals.trans}. \n` +
-                    `Cashier Performance: ${JSON.stringify(cashierData)}. \n` +
-                    `Identify 2 high-performing cashiers, flag any low margins, and suggest 1 operational improvement.`;
+                const systemPrompt = "You are a senior Operations Analyst. Format your response using specific Markdown patterns as requested.";
+                const userPrompt = `Analyze Cashier Performance (${startDate} to ${endDate}).
+Total Sales: $${totals.sales.toFixed(2)}, Trans: ${totals.trans}.
+Cashier Data: ${JSON.stringify(cashierData)}.
+
+STRICTLY use the following Markdown format:
+
+### 🔹 High-Performing Cashiers
+**[CASHIER NAME]**
+- Total Sales: **$[AMOUNT]**
+- Transactions: **[COUNT]**
+- Avg Sale: **$[AMOUNT]**
+- Notes: [Brief insight]
+
+(Repeat for top 2-3)
+
+> ⚠️ **Note:** [Highlight any anomalies like low transaction counts with high values]
+
+---
+
+### 🔹 Margin Analysis & Flag
+| Cashier | Margin (%) | Flag |
+| :--- | :--- | :--- |
+| [Name] | [Value] | ✅ Healthy / ⚠️ Monitor / ❌ Critical |
+(List all provided)
+
+---
+
+### 🔹 Suggested Operational Improvement
+**Goal:** [One sentence goal]
+
+**Action Plan:**
+1. **[Action Item]** - [Description]
+2. **[Action Item]** - [Description]
+3. **[Action Item]** - [Description]
+
+> ✅ [Closing positive note]`;
 
                 if (llmConfig.provider === 'Gemini') {
                     const model = llmConfig.client.getGenerativeModel({ model: llmConfig.model });

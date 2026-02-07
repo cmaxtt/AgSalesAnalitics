@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, Bot, TrendingUp, DollarSign, Activity, Package } from 'lucide-react';
+import { Calendar, Bot, TrendingUp, DollarSign, Activity, Package, BarChart2, PieChart as PieIcon, Layers, Table as TableIcon, Loader2 } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ComposedChart } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './VendorDashboard.css';
 
 const VendorDashboard = () => {
@@ -16,8 +21,16 @@ const VendorDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [reportData, setReportData] = useState(null);
     const [aiSummary, setAiSummary] = useState('');
+    const [view, setView] = useState('table'); // table, bar, combo, pie
 
     const handleReset = () => setDateRange(getDefaults());
+
+    const getFilename = (baseName) => {
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        return `${baseName}_${date}_${time}`;
+    };
 
     const handleExportExcel = () => {
         if (!reportData) return;
@@ -38,7 +51,7 @@ const VendorDashboard = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `vendor_revenue_${dateRange.start}_${dateRange.end}.csv`);
+        link.setAttribute("download", `${getFilename('Vendor_Revenue')}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -46,7 +59,35 @@ const VendorDashboard = () => {
 
     const handleExportPDF = () => {
         if (!reportData) return;
-        window.print();
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text("Vendor Revenue Analysis", 14, 15);
+
+        doc.setFontSize(10);
+        doc.text(`Period: ${dateRange.start} to ${dateRange.end}`, 14, 22);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 27);
+
+        const tableColumn = ["Vendor Name", "Inv", "Units", "Revenue", "Cost", "Profit", "Margin"];
+        const tableRows = reportData.map(row => [
+            row.VendorName,
+            row.TotalInvoices,
+            row.TotalUnitsSold,
+            `$${row.NetRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+            `$${row.TotalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+            `$${row.GrossProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+            `${row.MarginPct.toFixed(2)}%`
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 32,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [16, 185, 129] } // Emerald green header
+        });
+
+        doc.save(`${getFilename('Vendor_Revenue')}.pdf`);
     };
 
     const handleRunAnalysis = async () => {
@@ -115,8 +156,8 @@ const VendorDashboard = () => {
                     >
                         Reset
                     </button>
-                    <button className="vd-run-btn" onClick={handleRunAnalysis} disabled={loading}>
-                        {loading ? 'Analyzing...' : 'Run Analysis'}
+                    <button className="vd-run-btn" onClick={handleRunAnalysis} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {loading ? <><Loader2 className="animate-spin" size={18} /> Analyzing...</> : 'Run Analysis'}
                     </button>
 
                     {reportData && (
@@ -139,6 +180,18 @@ const VendorDashboard = () => {
                     )}
                 </div>
             </header>
+
+            {/* View Toggles */}
+            {reportData && (
+                <div className="vd-actions">
+                    <div className="view-toggles">
+                        <button title="Table View" className={`toggle-btn ${view === 'table' ? 'active' : ''}`} onClick={() => setView('table')}><TableIcon size={16} /> Table</button>
+                        <button title="Bar Chart (Revenue)" className={`toggle-btn ${view === 'bar' ? 'active' : ''}`} onClick={() => setView('bar')}><BarChart2 size={16} /> Revenue</button>
+                        <button title="Combo (Rev & Margin)" className={`toggle-btn ${view === 'combo' ? 'active' : ''}`} onClick={() => setView('combo')}><Activity size={16} /> Combo</button>
+                        <button title="Pie Share" className={`toggle-btn ${view === 'pie' ? 'active' : ''}`} onClick={() => setView('pie')}><PieIcon size={16} /> Share</button>
+                    </div>
+                </div>
+            )}
 
             <div className="vd-metrics-grid">
                 <div className="vd-stat-card">
@@ -187,8 +240,62 @@ const VendorDashboard = () => {
                         <h3 style={{ margin: 0, color: '#f0fdf4', fontSize: '1.1rem', letterSpacing: '0.5px' }}>AI-Intelligence Report</h3>
                     </div>
                     <div className="vd-ai-content" style={{ color: '#d1fae5', fontSize: '0.95rem', lineHeight: '1.7', fontFamily: "'Inter', sans-serif" }}>
-                        {aiSummary}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiSummary}</ReactMarkdown>
                     </div>
+                </div>
+            )}
+
+
+
+            {/* Chart Section */}
+            {view !== 'table' && reportData && (
+                <div className="vd-chart-section" style={{ height: '400px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        {view === 'bar' ? (
+                            <BarChart data={reportData.slice(0, 20)}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                <XAxis dataKey="VendorName" stroke="#9ca3af" fontSize={12} tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val} />
+                                <YAxis stroke="#9ca3af" />
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', color: '#f3f4f6' }} />
+                                <Legend />
+                                <Bar dataKey="NetRevenue" name="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        ) : view === 'combo' ? (
+                            <ComposedChart data={reportData.slice(0, 20)}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                <XAxis dataKey="VendorName" stroke="#9ca3af" fontSize={12} tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val} />
+                                <YAxis yAxisId="left" stroke="#9ca3af" />
+                                <YAxis yAxisId="right" orientation="right" stroke="#f59e0b" />
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', color: '#f3f4f6' }} />
+                                <Legend />
+                                <Bar yAxisId="left" dataKey="NetRevenue" name="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                <Line yAxisId="right" type="monotone" dataKey="MarginPct" name="Margin %" stroke="#f59e0b" strokeWidth={2} />
+                            </ComposedChart>
+                        ) : (
+                            <PieChart>
+                                <Pie
+                                    data={reportData.slice(0, 10)}
+                                    cx="50%" cy="50%"
+                                    outerRadius={120}
+                                    fill="#8884d8"
+                                    dataKey="NetRevenue"
+                                    nameKey="VendorName"
+                                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                        const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+                                        const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+                                        return `${(percent * 100).toFixed(0)}%`;
+                                    }}
+                                >
+                                    {reportData.slice(0, 10).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', color: '#f3f4f6' }} />
+                                <Legend />
+                            </PieChart>
+                        )}
+                    </ResponsiveContainer>
                 </div>
             )}
 

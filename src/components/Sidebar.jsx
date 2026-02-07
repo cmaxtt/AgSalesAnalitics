@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Database, PieChart, Users } from 'lucide-react';
+import { LayoutDashboard, Database, PieChart, Users, MessageSquare } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ currentView, onNavigate }) => {
@@ -36,10 +36,19 @@ const Sidebar = ({ currentView, onNavigate }) => {
 
             <div className="nav-section">
                 <div className="nav-section-title">Tools</div>
+                <div
+                    className={`nav-item ${currentView === 'chat' ? 'active' : ''}`}
+                    onClick={() => onNavigate('chat')}
+                >
+                    <MessageSquare className="nav-icon" />
+                    <span>AI Assistant</span>
+                </div>
+                {/* 
                 <div className="nav-item">
                     <Database className="nav-icon" />
                     <span>Query Builder</span>
-                </div>
+                </div> 
+                */}
             </div>
         </aside>
     );

@@ -1,0 +1,244 @@
+.executive-dashboard {
+    background-color: #ffffff;
+    min-height: 100vh;
+    padding: 2rem;
+    color: #1e293b;
+    font-family: 'Inter', sans-serif;
+}
+
+.ed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.ed-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ed-logo-circle {
+    width: 32px;
+    height: 32px;
+    background: #1e293b;
+    border-radius: 50%;
+    position: relative;
+}
+
+.ed-logo-circle::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 12px;
+    height: 12px;
+    border: 3px solid white;
+    border-radius: 50%;
+    border-top-color: transparent;
+}
+
+.ed-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: #111827;
+}
+
+.ed-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.ed-controls input {
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.ed-controls button {
+    background: #111827;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+.ed-controls button:hover {
+    background: #334155;
+}
+
+.ed-metrics-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.ed-metric-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ed-metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.ed-metric-icon.revenue {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.ed-metric-icon.trans {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.ed-metric-icon.regs {
+    background: #fef2f2;
+    color: #f43f5e;
+}
+
+.ed-metric-icon.users {
+    background: #fffbeb;
+    color: #fbbf24;
+}
+
+.ed-metric-icon.trend {
+    background: #f5f3ff;
+    color: #8b5cf6;
+}
+
+.ed-metric-icon.info {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.ed-metric-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.01em;
+}
+
+.ed-metric-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.ed-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.ed-chart-container {
+    background: #ffffff;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1rem;
+}
+
+.ed-chart-container.full-width {
+    grid-column: span 3;
+}
+
+.ed-chart-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 1.5rem;
+}
+
+.ed-footer {
+    display: flex;
+    gap: 3rem;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 2rem;
+}
+
+.ed-footer-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.ed-footer-item span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.ed-footer-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ed-footer-bar::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    left: -100%;
+    animation: sweep 2s infinite;
+}
+
+@keyframes sweep {
+    100% {
+        left: 100%;
+    }
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .ed-charts-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ed-chart-container.full-width {
+        grid-column: span 2;
+    }
+}

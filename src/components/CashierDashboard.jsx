@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Calendar, Bot, TrendingUp, DollarSign, Activity, Users, ShoppingCart, Percent } from 'lucide-react';
+import { Calendar, Bot, TrendingUp, DollarSign, Activity, Users, ShoppingCart, Percent, BarChart2, PieChart as PieIcon, Layers, Table as TableIcon, Loader2 } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ComposedChart } from 'recharts';
+
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import './CashierDashboard.css';
 
 const CashierDashboard = () => {
@@ -16,8 +23,54 @@ const CashierDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [reportData, setReportData] = useState(null);
     const [aiSummary, setAiSummary] = useState('');
+    const [view, setView] = useState('table'); // table, bar, combo, pie
 
     const handleReset = () => setDateRange(getDefaults());
+
+    const getFilename = (baseName) => {
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        return `${baseName}_${date}_${time}`;
+    };
+
+    const handleExportExcel = () => {
+        if (!reportData) return;
+        const ws = XLSX.utils.json_to_sheet(reportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Cashier_Flash");
+        XLSX.writeFile(wb, `${getFilename('Cashier_Flash')}.xlsx`);
+    };
+
+    const handleExportPDF = () => {
+        if (!reportData) return;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text("Cashier Flash Analysis", 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Period: ${dateRange.start} to ${dateRange.end}`, 14, 22);
+
+        const tableColumn = ["Cashier", "Date", "Period", "Reg", "Sales VI", "Trans", "Margin %"];
+        const tableRows = reportData.map(row => [
+            row.UserName,
+            new Date(row.InvoiceDate).toLocaleDateString(),
+            row.SalesPeriod,
+            row.Register,
+            `$${row.SalesVI.toLocaleString()}`,
+            row.Trans,
+            `${row['%Margin'].toFixed(2)}%`
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 28,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [59, 130, 246] } // Blue header
+        });
+        doc.save(`${getFilename('Cashier_Flash')}.pdf`);
+    };
 
     const handleRunAnalysis = async () => {
         setLoading(true);
@@ -85,11 +138,41 @@ const CashierDashboard = () => {
                     >
                         Reset
                     </button>
-                    <button className="cd-run-btn" onClick={handleRunAnalysis} disabled={loading}>
-                        {loading ? 'Processing...' : 'Run Analysis'}
+                    <button className="cd-run-btn" onClick={handleRunAnalysis} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {loading ? <><Loader2 className="animate-spin" size={18} /> Processing...</> : 'Run Analysis'}
                     </button>
+                    {reportData && (
+                        <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem', borderLeft: '1px solid #374151', paddingLeft: '1rem' }}>
+                            <button
+                                onClick={handleExportExcel}
+                                title="Export to Excel"
+                                style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', padding: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                                <TableIcon size={14} /> XLSX
+                            </button>
+                            <button
+                                onClick={handleExportPDF}
+                                title="Save as PDF"
+                                style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', padding: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                                <Users size={14} /> PDF
+                            </button>
+                        </div>
+                    )}
                 </div>
             </header>
+
+            {/* View Toggles */}
+            {reportData && (
+                <div className="cd-actions">
+                    <div className="view-toggles">
+                        <button title="Table View" className={`toggle-btn ${view === 'table' ? 'active' : ''}`} onClick={() => setView('table')}><TableIcon size={16} /> Table</button>
+                        <button title="Bar Chart (Sales)" className={`toggle-btn ${view === 'bar' ? 'active' : ''}`} onClick={() => setView('bar')}><BarChart2 size={16} /> Sales</button>
+                        <button title="Combo (Sales & Margin)" className={`toggle-btn ${view === 'combo' ? 'active' : ''}`} onClick={() => setView('combo')}><Activity size={16} /> Combo</button>
+                        <button title="Pie Trans" className={`toggle-btn ${view === 'pie' ? 'active' : ''}`} onClick={() => setView('pie')}><PieIcon size={16} /> Trans</button>
+                    </div>
+                </div>
+            )}
 
             <div className="cd-metrics-grid">
                 <div className="cd-stat-card border-cyan">
@@ -133,8 +216,62 @@ const CashierDashboard = () => {
                         <h3>AI-Intelligence Report</h3>
                     </div>
                     <div className="cd-ai-content">
-                        {aiSummary}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiSummary}</ReactMarkdown>
                     </div>
+                </div>
+            )}
+
+
+
+            {/* Chart Section */}
+            {view !== 'table' && reportData && (
+                <div className="cd-chart-section" style={{ height: '400px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        {view === 'bar' ? (
+                            <BarChart data={reportData.slice(0, 20)}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                <XAxis dataKey="UserName" stroke="#9ca3af" fontSize={12} tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val} />
+                                <YAxis stroke="#9ca3af" />
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', color: '#f3f4f6' }} />
+                                <Legend />
+                                <Bar dataKey="SalesVI" name="Total Sales" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        ) : view === 'combo' ? (
+                            <ComposedChart data={reportData.slice(0, 20)}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                <XAxis dataKey="UserName" stroke="#9ca3af" fontSize={12} tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val} />
+                                <YAxis yAxisId="left" stroke="#9ca3af" />
+                                <YAxis yAxisId="right" orientation="right" stroke="#ec4899" />
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', color: '#f3f4f6' }} />
+                                <Legend />
+                                <Bar yAxisId="left" dataKey="SalesVI" name="Total Sales" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                <Line yAxisId="right" type="monotone" dataKey="%Margin" name="Margin %" stroke="#ec4899" strokeWidth={2} />
+                            </ComposedChart>
+                        ) : (
+                            <PieChart>
+                                <Pie
+                                    data={reportData.slice(0, 10)}
+                                    cx="50%" cy="50%"
+                                    outerRadius={120}
+                                    fill="#8884d8"
+                                    dataKey="Trans"
+                                    nameKey="UserName"
+                                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                        const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+                                        const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+                                        return `${(percent * 100).toFixed(0)}%`;
+                                    }}
+                                >
+                                    {reportData.slice(0, 10).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', color: '#f3f4f6' }} />
+                                <Legend />
+                            </PieChart>
+                        )}
+                    </ResponsiveContainer>
                 </div>
             )}
 

@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import VendorDashboard from './components/VendorDashboard';
 import CashierDashboard from './components/CashierDashboard';
+import Chatbot from './components/Chatbot';
 
 function App() {
   const [currentView, setCurrentView] = useState('overview');
@@ -13,6 +14,7 @@ function App() {
       case 'overview': return <Dashboard />;
       case 'vendor': return <VendorDashboard />;
       case 'cashier': return <CashierDashboard />;
+      case 'chat': return <Chatbot />;
       default: return <Dashboard />;
     }
   };

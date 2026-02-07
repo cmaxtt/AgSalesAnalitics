@@ -3,6 +3,9 @@
     color: white;
     max-width: 1400px;
     margin: 0 auto;
+    background-color: rgba(11, 18, 21, 0.85);
+    backdrop-filter: blur(4px);
+    min-height: 100vh;
 }
 
 .cd-header {
@@ -147,8 +150,8 @@
 
 /* AI Section Styling */
 .cd-ai-section {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(13, 148, 136, 0.1) 100%);
-    border: 1px solid rgba(34, 211, 238, 0.2);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(71, 85, 105, 0.4);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -173,6 +176,75 @@
     line-height: 1.8;
     color: #e5e7eb;
     font-size: 0.95rem;
+}
+
+.cd-ai-content h3 {
+    color: #fca5a5;
+    /* Light Red */
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+    border-left: 3px solid #fca5a5;
+    padding-left: 0.8rem;
+}
+
+.cd-ai-content h3:first-child {
+    margin-top: 0;
+}
+
+.cd-ai-content p {
+    margin-bottom: 1rem;
+}
+
+.cd-ai-content strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+.cd-ai-content ul {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.cd-ai-content li {
+    margin-bottom: 0.5rem;
+}
+
+.cd-ai-content table {
+    width: 100%;
+    margin: 1.5rem 0;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.cd-ai-content th {
+    background: rgba(255, 255, 255, 0.1);
+    color: #93c5fd;
+    font-weight: 600;
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cd-ai-content td {
+    padding: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cd-ai-content tr:last-child td {
+    border-bottom: none;
+}
+
+.cd-ai-content blockquote {
+    background: rgba(251, 191, 36, 0.1);
+    /* Amber tint */
+    border-left: 4px solid #fbbf24;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 0 8px 8px 0;
+    color: #fcd34d;
 }
 
 /* Table Styling */
@@ -210,4 +282,18 @@
 
 .cd-table tr:last-child td {
     border-bottom: none;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }

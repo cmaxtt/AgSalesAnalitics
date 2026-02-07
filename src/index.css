@@ -2,25 +2,27 @@
 
 :root {
   /* Dark Theme Palette */
-  --color-bg-dark: #10141d;       /* Main Background */
-  --color-bg-card: #1a1f2e;       /* Card/Sidebar Background */
+  --color-bg-dark: #10141d;
+  /* Main Background */
+  --color-bg-card: #1a1f2e;
+  /* Card/Sidebar Background */
   --color-text-main: #ffffff;
   --color-text-muted: #8b9bb4;
-  
+
   /* Accents */
   --color-accent-cyan: #00e5ff;
   --color-accent-green: #00ff9d;
   --color-accent-pink: #ff2e63;
   --color-accent-blue: #2979ff;
-  
+
   /* Borders & Dividers */
   --color-border: #2a3b55;
-  
+
   /* UI Elements */
   --radius-card: 12px;
   --radius-sm: 8px;
   --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.3);
-  
+
   --font-main: 'Inter', system-ui, sans-serif;
 }
 
@@ -29,12 +31,22 @@ body {
   padding: 0;
   font-family: var(--font-main);
   background-color: var(--color-bg-dark);
+  background-image: url('/background.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-weight: 600;
   color: var(--color-text-main);
@@ -62,14 +74,14 @@ button {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-dark); 
+  background: var(--color-bg-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155; 
+  background: #334155;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569; 
+  background: #475569;
 }

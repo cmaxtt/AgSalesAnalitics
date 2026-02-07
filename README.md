@@ -7,11 +7,17 @@ A modern, interactive Sales Analytics web application designed to connect to SQL
 - **Interactive UI**: Built with React and Vite for a fast, responsive user experience.
 - **SQL Server Integration**: Connects to local or remote SQL Server instances to fetch real-time sales data.
 - **AI-Powered Summaries**: Integrates with OpenAI or DeepSeek to generate concise, professional executive summaries from your datasets.
+- **Executive Dashboard**: A high-level view of profitability, revenue trends, and key performance indicators with interactive charts.
+- **AI Chatbot Assistant**: Natural language querying of your sales data with automatic chart generation and deep insights.
+- **Enhanced Reporting**:
+  - **Rich Formatting**: AI summaries now feature tables, styled headers, and clear action items using Markdown.
+  - **Export Options**: One-click download of reports to PDF and Excel with smart timestamps.
+  - **Visual Feedback**: Loading spinners and status indicators for a responsive user experience.
 - **Vendor Range Analysis**: Detailed revenue and profit tracking by vendor with date filters.
 - **Cashier Flash Report**: A dual-interface feature providing:
   - **Web Dashboard**: Real-time KPI cards (Sales, Transactions, Margin, ATV) and performance tables.
   - **CLI Tool**: A standalone Python application for advanced analytics and CSV/JSON exports.
-- **AI-Powered Summaries**: Integrates with Gemini, DeepSeek, or OpenAI to generate concise performance insights.
+- **Modern UI**: Custom background with glassmorphism effects for a premium look and feel.
 - **Persistent Settings**: Remembers your database connection strings and credentials for seamless sessions.
 
 ## Project Structure
