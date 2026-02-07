@@ -49,6 +49,39 @@ const connectDB = async (config) => {
     }
 };
 
+const initQueryTables = async () => {
+    try {
+        if (!pool) return;
+        const request = pool.request();
+
+        // 1. QueryHistory Table
+        await request.query(`
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='QueryHistory' and xtype='U')
+            CREATE TABLE QueryHistory (
+                ID INT IDENTITY(1,1) PRIMARY KEY,
+                QueryText NVARCHAR(MAX),
+                GeneratedSQL NVARCHAR(MAX),
+                Timestamp DATETIME DEFAULT GETDATE()
+            );
+        `);
+
+        // 2. QueryFavorites Table
+        await request.query(`
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='QueryFavorites' and xtype='U')
+            CREATE TABLE QueryFavorites (
+                ID INT IDENTITY(1,1) PRIMARY KEY,
+                QueryText NVARCHAR(MAX),
+                GeneratedSQL NVARCHAR(MAX),
+                Note NVARCHAR(255),
+                Timestamp DATETIME DEFAULT GETDATE()
+            );
+        `);
+        console.log("Query History & Favorites tables initialized.");
+    } catch (err) {
+        console.error("Failed to init query tables:", err);
+    }
+};
+
 const getPool = () => pool;
 
-module.exports = { connectDB, getPool, sql };
+module.exports = { connectDB, getPool, sql, initQueryTables };

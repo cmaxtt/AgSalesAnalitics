@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { connectDB, getPool, sql } = require('./db');
+const { connectDB, getPool, sql, initQueryTables } = require('./db');
 require('dotenv').config();
 const OpenAI = require('openai');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -91,6 +91,7 @@ const loadConfig = () => {
         try {
             console.log("Found saved config, attempting auto-connect...");
             await connectDB(config);
+            await initQueryTables();
             console.log("Auto-connected to SQL Server.");
         } catch (err) {
             console.error("Auto-connect failed:", err.message);
@@ -108,6 +109,7 @@ app.post('/api/connect', async (req, res) => {
 
     try {
         await connectDB({ server, database, user, password });
+        await initQueryTables();
         // Save successful config
         saveConfig({ server, database, user, password });
         res.json({ success: true, message: 'Connected to SQL Server successfully' });
@@ -234,6 +236,16 @@ app.post('/api/chat/query', async (req, res) => {
             data: result.recordset
         });
 
+        // Async log to history (fire and forget)
+        (async () => {
+            try {
+                const histReq = pool.request();
+                histReq.input('userP', sql.NVarChar(sql.MAX), userPrompt);
+                histReq.input('genSql', sql.NVarChar(sql.MAX), sqlQuery);
+                await histReq.query("INSERT INTO QueryHistory (QueryText, GeneratedSQL) VALUES (@userP, @genSql)");
+            } catch (e) { console.error("History Log Error:", e); }
+        })();
+
     } catch (err) {
         console.error("Chat Query Error:", err);
         res.status(500).json({ error: 'Query Execution Failed', details: err.message });
@@ -244,6 +256,91 @@ app.post('/api/chat/query', async (req, res) => {
 app.get('/api/connection-status', (req, res) => {
     const pool = getPool();
     res.json({ connected: !!pool });
+});
+
+// --- Smart Naming API ---
+app.post('/api/chat/suggest-name', async (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'Prompt required' });
+
+    try {
+        const llmConfig = getLLMClient();
+        if (!llmConfig) return res.json({ filename: 'Report_' + Date.now() });
+
+        const systemPrompt = `You are a helpful assistant.
+        Task: Create a concise, professional filename for a report based on the user's query.
+        Rules:
+        1. Max 3-5 words.
+        2. Use underscores instead of spaces.
+        3. No file extension.
+        4. Include the main subject (e.g., 'Vendor_Sales', 'Q1_Revenue').
+        5. Return ONLY the filename string. No JSON, no markdown.`;
+
+        let filename = "";
+        if (llmConfig.provider === 'Gemini') {
+            const model = llmConfig.client.getGenerativeModel({ model: llmConfig.model });
+            const result = await model.generateContent(`${systemPrompt}\nUser Query: "${prompt}"`);
+            filename = result.response.text();
+        } else {
+            const completion = await llmConfig.client.chat.completions.create({
+                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
+                model: llmConfig.model,
+            });
+            filename = completion.choices[0].message.content;
+        }
+
+        filename = filename.replace(/["'`]/g, '').trim();
+        res.json({ filename });
+    } catch (error) {
+        console.error("Naming Error:", error);
+        res.status(500).json({ error: 'Naming failed' });
+    }
+});
+
+// --- Favorites API ---
+
+// GET Favorites
+app.get('/api/chat/favorites', async (req, res) => {
+    const pool = getPool();
+    if (!pool) return res.status(500).json({ error: 'DB not connected' });
+    try {
+        const result = await pool.request().query("SELECT * FROM QueryFavorites ORDER BY Timestamp DESC");
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch favorites' });
+    }
+});
+
+// ADD Favorite
+app.post('/api/chat/favorite', async (req, res) => {
+    const { queryText, generatedSql, note } = req.body;
+    const pool = getPool();
+    if (!pool) return res.status(500).json({ error: 'DB not connected' });
+    try {
+        const req = pool.request();
+        req.input('qText', sql.NVarChar(sql.MAX), queryText);
+        req.input('gSql', sql.NVarChar(sql.MAX), generatedSql);
+        req.input('note', sql.NVarChar(255), note || '');
+        await req.query("INSERT INTO QueryFavorites (QueryText, GeneratedSQL, Note) VALUES (@qText, @gSql, @note)");
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to save favorite' });
+    }
+});
+
+// DELETE Favorite
+app.delete('/api/chat/favorite/:id', async (req, res) => {
+    const { id } = req.params;
+    const pool = getPool();
+    if (!pool) return res.status(500).json({ error: 'DB not connected' });
+    try {
+        const req = pool.request();
+        req.input('id', sql.Int, id);
+        await req.query("DELETE FROM QueryFavorites WHERE ID = @id");
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete favorite' });
+    }
 });
 
 // 2. Vendor Revenue Report Endpoint
