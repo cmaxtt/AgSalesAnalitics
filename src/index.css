@@ -1,40 +1,95 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Dark Theme Palette */
-  --color-bg-dark: #10141d;
-  /* Main Background */
-  --color-bg-card: #1a1f2e;
-  /* Card/Sidebar Background */
-  --color-text-main: #ffffff;
-  --color-text-muted: #8b9bb4;
-
-  /* Accents */
-  --color-accent-cyan: #00e5ff;
-  --color-accent-green: #00ff9d;
-  --color-accent-pink: #ff2e63;
-  --color-accent-blue: #2979ff;
-
-  /* Borders & Dividers */
-  --color-border: #2a3b55;
-
-  /* UI Elements */
+  /* Common Variables */
   --radius-card: 12px;
   --radius-sm: 8px;
   --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.3);
-
   --font-main: 'Inter', system-ui, sans-serif;
+
+  /* Brand Colors */
+  --color-brand-cyan: #00e5ff;
+  --color-brand-green: #00ff9d;
+  --color-brand-pink: #ff2e63;
+  --color-brand-blue: #2979ff;
+}
+
+/* Dark Theme (Default) */
+[data-theme='dark'] {
+  --bg-primary: #10141d;
+  --bg-secondary: #1a1f2e;
+  /* Card background */
+  --bg-tertiary: #232b3e;
+  /* Inputs/Hovers */
+
+  --text-primary: #ffffff;
+  --text-secondary: #8b9bb4;
+  --text-tertiary: #586985;
+
+  --border-color: #2a3b55;
+
+  --accent-cyan: var(--color-brand-cyan);
+  --accent-green: var(--color-brand-green);
+  --accent-pink: var(--color-brand-pink);
+  --accent-blue: var(--color-brand-blue);
+
+  --shadow-color: rgba(0, 0, 0, 0.3);
+
+  /* Legacy Aliases */
+  --color-bg-dark: var(--bg-primary);
+  --color-bg-card: var(--bg-secondary);
+  --color-text-main: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
+  --color-border: var(--border-color);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-green: var(--accent-green);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-blue: var(--accent-blue);
+}
+
+/* Light Theme */
+[data-theme='light'] {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  /* Card background */
+  --bg-tertiary: #e4e7eb;
+  /* Inputs/Hovers */
+
+  --text-primary: #1a1f2e;
+  --text-secondary: #4a5568;
+  --text-tertiary: #a0aec0;
+
+  --border-color: #cbd5e0;
+
+  --accent-cyan: #00838f;
+  /* Darker variants for visibility on light bg */
+  --accent-green: #2e7d32;
+  --accent-pink: #c2185b;
+  --accent-blue: #1565c0;
+
+  --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* Legacy Aliases */
+  --color-bg-dark: var(--bg-primary);
+  --color-bg-card: var(--bg-secondary);
+  --color-text-main: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
+  --color-border: var(--border-color);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-green: var(--accent-green);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-blue: var(--accent-blue);
 }
 
 body {
   margin: 0;
   padding: 0;
   font-family: var(--font-main);
-  background-color: var(--color-bg-dark);
-  /* background-image removed to prevent blocking view */
-  color: var(--color-text-main);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1,
@@ -45,11 +100,11 @@ h5,
 h6 {
   margin: 0;
   font-weight: 600;
-  color: var(--color-text-main);
+  color: var(--text-primary);
 }
 
 p {
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
 }
 
 button {
@@ -63,21 +118,21 @@ button {
   box-sizing: border-box;
 }
 
-/* Scrollbar styling for dark theme */
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-dark);
+  background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--border-color);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--text-tertiary);
 }

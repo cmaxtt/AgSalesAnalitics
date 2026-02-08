@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText, Table as TableIcon, Activity, BarChart2, PieChart as PieIcon, Layers, Star, Trash2, X, History, User } from 'lucide-react';
+import { Send, FileText, Table as TableIcon, Activity, BarChart2, PieChart as PieIcon, Layers, Star, Trash2, X, History, User, Printer } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ComposedChart } from 'recharts';
@@ -17,7 +17,6 @@ const formatValue = (key, value) => {
         }
     }
     if (typeof value === 'string' && !isNaN(Date.parse(value)) && value.length > 10) {
-        // Try to detect dates (rough heuristic)
         const d = new Date(value);
         if (!isNaN(d.getTime())) return d.toLocaleDateString();
     }
@@ -39,10 +38,8 @@ const ChartRenderer = ({ data, id, onExport }) => {
     const COLORS = ['#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444'];
 
     const renderChart = () => {
-        // Limit data points for performance/readability on charts
         const chartData = data.length > 30 ? data.slice(0, 30) : data;
 
-        // Chart Container Wrapper with Unique ID
         const ChartWrapper = ({ children }) => (
             <div id={`${id}-chart-container`} style={{ background: 'white', padding: '10px', borderRadius: '8px' }}>
                 {children}
@@ -122,12 +119,12 @@ const ChartRenderer = ({ data, id, onExport }) => {
                                     cx="50%" cy="50%"
                                     outerRadius={80}
                                     fill="#8884d8"
-                                    dataKey={keysY[0]} // Use first numeric value
+                                    dataKey={keysY[0]}
                                     nameKey={keyX}
                                     label
                                 >
                                     {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <Tooltip />
@@ -135,7 +132,7 @@ const ChartRenderer = ({ data, id, onExport }) => {
                         </ResponsiveContainer>
                     </ChartWrapper>
                 );
-            default: // Table view
+            default:
                 return (
                     <div className="result-table-container">
                         <table className="result-table">
@@ -154,6 +151,67 @@ const ChartRenderer = ({ data, id, onExport }) => {
         }
     };
 
+    const handlePrint = async () => {
+        const chartContainer = document.getElementById(`${id}-chart-container`);
+        let chartImg = '';
+
+        if (chartContainer) {
+            try {
+                const canvas = await html2canvas(chartContainer, { scale: 2 });
+                chartImg = canvas.toDataURL('image/png');
+            } catch (e) {
+                console.error("Print capture failed", e);
+            }
+        }
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert("Please allow popups to print");
+            return;
+        }
+
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Print Report</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; color: #333; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; font-weight: bold; }
+                    img { max-width: 100%; height: auto; border: 1px solid #eee; margin-bottom: 20px; }
+                    .header { margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                    .footer { margin-top: 30px; font-size: 10px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>Analysis Report</h2>
+                    <p>Generated on ${new Date().toLocaleString()}</p>
+                </div>
+                ${chartImg ? `<img src="${chartImg}" />` : ''}
+                <table>
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(row => `<tr>${headers.map(h => `<td>${formatValue(h, row[h])}</td>`).join('')}</tr>`).join('')}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    Generated by AgSales Analytics
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    };
+
     return (
         <div className="result-block" id={id}>
             <div className="result-actions">
@@ -168,6 +226,7 @@ const ChartRenderer = ({ data, id, onExport }) => {
                 <div className="export-actions">
                     <button onClick={() => onExport('excel', data, id)} className="export-btn excel" title="Save Excel"><TableIcon size={14} style={{ marginRight: 4 }} /> XLS</button>
                     <button onClick={() => onExport('pdf', data, id)} className="export-btn pdf" title="Save PDF"><FileText size={14} style={{ marginRight: 4 }} /> PDF</button>
+                    <button onClick={handlePrint} className="export-btn print" title="Print"><Printer size={14} style={{ marginRight: 4 }} /> Print</button>
                 </div>
             </div>
             <div className="result-content-area">
@@ -302,6 +361,7 @@ const Chatbot = () => {
         const defaultName = `${baseName}_${dateStr}_${timeStr}`;
 
         try {
+            /* TEMPORARY DISABLE AI NAMING TO DEBUG HANG
             const lastUserMsg = currentMessages ? [...currentMessages].reverse().find(m => m.type === 'user') : null;
             if (lastUserMsg) {
                 const res = await fetch('http://localhost:3030/api/chat/suggest-name', {
@@ -319,6 +379,7 @@ const Chatbot = () => {
                     }
                 }
             }
+            */
         } catch (e) { console.error("Name suggestion failed", e); }
 
         const userPrompt = prompt("Enter a name for this report:", defaultName);
@@ -416,8 +477,9 @@ const Chatbot = () => {
     const handleExport = async (type, data, chartId) => {
         console.log(`[Export Debug] Type: ${type}, ChartID: ${chartId}, Data Length: ${data ? data.length : 0}`);
         try {
-            // alert(`Starting ${type} export...`); // Temporary debug alert
+            alert(`Starting ${type} export...`); // Debug Alert
             const filename = await getFilename('AI_Report', messages);
+            alert(`Filename: ${filename}`); // Debug Alert
             console.log("[Export Debug] Filename:", filename);
 
             if (type === 'excel') {
