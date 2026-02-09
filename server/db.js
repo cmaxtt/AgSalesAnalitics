@@ -76,7 +76,23 @@ const initQueryTables = async () => {
                 Timestamp DATETIME DEFAULT GETDATE()
             );
         `);
-        console.log("Query History & Favorites tables initialized.");
+
+        // 3. Update Schemas for Metrics (Idempotent)
+        await request.query(`
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('QueryHistory') AND name = 'ExecutionTimeMs')
+            ALTER TABLE QueryHistory ADD ExecutionTimeMs INT DEFAULT 0;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('QueryHistory') AND name = 'TokenUsage')
+            ALTER TABLE QueryHistory ADD TokenUsage INT DEFAULT 0;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('QueryFavorites') AND name = 'ExecutionTimeMs')
+            ALTER TABLE QueryFavorites ADD ExecutionTimeMs INT DEFAULT 0;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('QueryFavorites') AND name = 'TokenUsage')
+            ALTER TABLE QueryFavorites ADD TokenUsage INT DEFAULT 0;
+        `);
+
+        console.log("Query History & Favorites tables initialized/updated.");
     } catch (err) {
         console.error("Failed to init query tables:", err);
     }

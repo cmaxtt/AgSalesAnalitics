@@ -160,6 +160,8 @@ app.post('/api/chat/query', async (req, res) => {
     if (!pool) return res.status(500).json({ error: 'Not connected to database.' });
 
     try {
+        const startTime = Date.now();
+
         // 1. Get Schema Context
         const schemaContext = await getSchemaContext(pool);
 
@@ -195,11 +197,21 @@ app.post('/api/chat/query', async (req, res) => {
         ${schemaContext}`;
 
         let generatedResponse = "";
+        let tokenUsage = { input: 0, output: 0, total: 0 };
 
         if (llmConfig.provider === 'Gemini') {
             const model = llmConfig.client.getGenerativeModel({ model: llmConfig.model });
             const result = await model.generateContent(systemPrompt + "\nUser Request: " + userPrompt);
-            generatedResponse = result.response.text();
+            const response = result.response;
+            generatedResponse = response.text();
+
+            if (response.usageMetadata) {
+                tokenUsage = {
+                    input: response.usageMetadata.promptTokenCount,
+                    output: response.usageMetadata.candidatesTokenCount,
+                    total: response.usageMetadata.totalTokenCount
+                };
+            }
         } else {
             const completion = await llmConfig.client.chat.completions.create({
                 messages: [
@@ -209,6 +221,14 @@ app.post('/api/chat/query', async (req, res) => {
                 model: llmConfig.model,
             });
             generatedResponse = completion.choices[0].message.content;
+
+            if (completion.usage) {
+                tokenUsage = {
+                    input: completion.usage.prompt_tokens,
+                    output: completion.usage.completion_tokens,
+                    total: completion.usage.total_tokens
+                };
+            }
         }
 
         // Clean response if it contains markdown code blocks
@@ -239,11 +259,19 @@ app.post('/api/chat/query', async (req, res) => {
         const request = pool.request();
         const result = await request.query(sqlQuery);
 
+        const executionTimeMs = Date.now() - startTime;
+
         res.json({
             success: true,
             sql: sqlQuery,
             explanation: parsedResponse.explanation,
-            data: result.recordset
+            aiReport: parsedResponse.ai_report,
+            operationalImprovement: parsedResponse.operational_improvement,
+            data: result.recordset,
+            metrics: {
+                executionTimeMs,
+                tokenUsage
+            }
         });
 
         // Async log to history (fire and forget)
@@ -252,7 +280,9 @@ app.post('/api/chat/query', async (req, res) => {
                 const histReq = pool.request();
                 histReq.input('userP', sql.NVarChar(sql.MAX), userPrompt);
                 histReq.input('genSql', sql.NVarChar(sql.MAX), sqlQuery);
-                await histReq.query("INSERT INTO QueryHistory (QueryText, GeneratedSQL) VALUES (@userP, @genSql)");
+                histReq.input('execTime', sql.Int, executionTimeMs);
+                histReq.input('tokens', sql.Int, tokenUsage.total);
+                await histReq.query("INSERT INTO QueryHistory (QueryText, GeneratedSQL, ExecutionTimeMs, TokenUsage) VALUES (@userP, @genSql, @execTime, @tokens)");
             } catch (e) { console.error("History Log Error:", e); }
         })();
 
@@ -323,7 +353,7 @@ app.get('/api/chat/favorites', async (req, res) => {
 
 // ADD Favorite
 app.post('/api/chat/favorite', async (req, res) => {
-    const { queryText, generatedSql, note } = req.body;
+    const { queryText, generatedSql, note, executionTimeMs, tokenUsage } = req.body;
     const pool = getPool();
     if (!pool) return res.status(500).json({ error: 'DB not connected' });
     try {
@@ -331,7 +361,11 @@ app.post('/api/chat/favorite', async (req, res) => {
         req.input('qText', sql.NVarChar(sql.MAX), queryText);
         req.input('gSql', sql.NVarChar(sql.MAX), generatedSql);
         req.input('note', sql.NVarChar(255), note || '');
-        await req.query("INSERT INTO QueryFavorites (QueryText, GeneratedSQL, Note) VALUES (@qText, @gSql, @note)");
+
+        req.input('execTime', sql.Int, executionTimeMs || 0);
+        req.input('tokens', sql.Int, tokenUsage || 0);
+
+        await req.query("INSERT INTO QueryFavorites (QueryText, GeneratedSQL, Note, ExecutionTimeMs, TokenUsage) VALUES (@qText, @gSql, @note, @execTime, @tokens)");
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to save favorite' });

@@ -315,7 +315,9 @@ const Chatbot = () => {
                 body: JSON.stringify({
                     queryText: msg.content,
                     generatedSql: msg.sql,
-                    note: note || "Saved Query"
+                    note: note || "Saved Query",
+                    executionTimeMs: msg.metrics?.executionTimeMs,
+                    tokenUsage: msg.metrics?.tokenUsage?.total
                 })
             });
             if (res.ok) {
@@ -364,6 +366,7 @@ const Chatbot = () => {
                     sql: data.sql,
                     aiReport: data.ai_report,
                     operationalImprovement: data.operational_improvement,
+                    metrics: data.metrics,
                     relatedPrompt: queryText
                 }]);
             }
@@ -637,6 +640,14 @@ const Chatbot = () => {
                             <div className="operational-improvement-section" style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(0, 255, 157, 0.05)', borderRadius: '8px', borderLeft: '3px solid #00ff9d' }}>
                                 <h4 style={{ margin: '0 0 5px 0', color: '#00ff9d', fontSize: '0.9rem' }}>Suggested Operational Improvement</h4>
                                 <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>{msg.operationalImprovement}</p>
+                            </div>
+                        )}
+
+                        {msg.metrics && (
+                            <div className="metrics-section" style={{ marginTop: '8px', fontSize: '0.75rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span>⏱️ {(msg.metrics.executionTimeMs / 1000).toFixed(2)}s</span>
+                                <span>•</span>
+                                <span>🪙 {msg.metrics.tokenUsage ? msg.metrics.tokenUsage.total : 'N/A'} tokens</span>
                             </div>
                         )}
 
