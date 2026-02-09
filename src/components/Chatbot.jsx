@@ -170,18 +170,46 @@ const ChartRenderer = ({ data, id, onExport }) => {
             return;
         }
 
+        // Prepare Report Sections
+        const aiReportHTML = aiReport ? `
+            <div class="report-section ai-report">
+                <h3>AI-Intelligence Report</h3>
+                <p>${aiReport}</p>
+            </div>
+        ` : '';
+
+        const opImprovementHTML = operationalImprovement ? `
+            <div class="report-section op-improvement">
+                <h3>Suggested Operational Improvement</h3>
+                <p>${operationalImprovement}</p>
+            </div>
+        ` : '';
+
         printWindow.document.write(`
             <html>
             <head>
                 <title>Print Report</title>
                 <style>
-                    body { font-family: sans-serif; padding: 20px; color: #333; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; max-width: 1200px; margin: 0 auto; }
                     table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; font-weight: bold; }
-                    img { max-width: 100%; height: auto; border: 1px solid #eee; margin-bottom: 20px; }
-                    .header { margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                    .footer { margin-top: 30px; font-size: 10px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: left; }
+                    th { background-color: #f8f9fa; font-weight: 600; color: #495057; }
+                    tr:nth-child(even) { background-color: #f8f9fa; }
+                    img { max-width: 100%; height: auto; border: 1px solid #eee; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                    .header { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+                    .header h2 { margin: 0; color: #2c3e50; }
+                    .header p { margin: 5px 0 0; color: #7f8c8d; font-size: 0.9rem; }
+                    .footer { margin-top: 40px; font-size: 11px; color: #95a5a6; border-top: 1px solid #eee; padding-top: 20px; text-align: center; }
+                    
+                    .report-section { margin-bottom: 25px; padding: 15px 20px; border-radius: 8px; }
+                    .report-section h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
+                    .report-section p { margin: 0; line-height: 1.6; font-size: 0.95rem; }
+                    
+                    .ai-report { background-color: #e0f7fa; border-left: 5px solid #00bcd4; }
+                    .ai-report h3 { color: #00838f; }
+                    
+                    .op-improvement { background-color: #e8f5e9; border-left: 5px solid #2e7d32; }
+                    .op-improvement h3 { color: #2e7d32; }
                 </style>
             </head>
             <body>
@@ -189,7 +217,11 @@ const ChartRenderer = ({ data, id, onExport }) => {
                     <h2>Analysis Report</h2>
                     <p>Generated on ${new Date().toLocaleString()}</p>
                 </div>
+                
+                ${aiReportHTML}
                 ${chartImg ? `<img src="${chartImg}" />` : ''}
+                ${opImprovementHTML}
+
                 <table>
                     <thead>
                         <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
@@ -330,6 +362,8 @@ const Chatbot = () => {
                     content: data.explanation || 'Here are the results:',
                     data: data.data,
                     sql: data.sql,
+                    aiReport: data.ai_report,
+                    operationalImprovement: data.operational_improvement,
                     relatedPrompt: queryText
                 }]);
             }
@@ -394,7 +428,7 @@ const Chatbot = () => {
         XLSX.writeFile(wb, `${filename}.xlsx`);
     };
 
-    const exportToPDF = async (data, filename, chartId) => {
+    const exportToPDF = async (data, filename, chartId, msg) => {
         try {
             const doc = new jsPDF();
             console.log("PDF Init", doc);
@@ -411,60 +445,116 @@ const Chatbot = () => {
             doc.setFontSize(10);
             doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
-            let chartHeight = 0;
+            let currentY = 30;
 
-            // 1. Capture Chart if available and ID is provided
+            // 1. Capture Chart
             if (chartId) {
                 const chartContainerId = `${chartId}-chart-container`;
                 const chartElement = document.getElementById(chartContainerId);
 
                 if (chartElement) {
                     try {
-                        // Wait a moment for any rendering/animations
-                        await new Promise(r => setTimeout(r, 500));
+                        console.log(`[Export Debug] Found chart element: ${chartContainerId}, Width: ${chartElement.offsetWidth}, Height: ${chartElement.offsetHeight}`);
+
+                        // Ensure chart is fully rendered - wait a bit longer or check for SVG
+                        await new Promise(r => setTimeout(r, 1500));
 
                         const canvas = await html2canvas(chartElement, {
                             scale: 2,
                             useCORS: true,
-                            logging: false
+                            logging: true, // Enable internal logging to console
+                            backgroundColor: '#ffffff',
+                            onclone: (clonedDoc) => {
+                                console.log("[Export Debug] Element cloned for capture");
+                                const clonedElement = clonedDoc.getElementById(chartContainerId);
+                                if (clonedElement) {
+                                    clonedElement.style.backgroundColor = '#ffffff'; // Enforce white bg on clone
+                                    // Try to force SVGs to be visible
+                                    const svgs = clonedElement.querySelectorAll('svg');
+                                    svgs.forEach(svg => {
+                                        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                                        svg.style.overflow = 'visible';
+                                    });
+                                }
+                            }
                         });
 
                         const imgData = canvas.toDataURL('image/png');
+                        console.log(`[Export Debug] Captured Image Data Length: ${imgData.length}`);
+
+                        if (imgData.length < 1000) {
+                            console.warn("[Export Debug] Image data suspiciously small, capture might be empty.");
+                        }
+
                         const imgProps = doc.getImageProperties(imgData);
                         const pdfWidth = doc.internal.pageSize.getWidth() - 28;
                         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-                        doc.addImage(imgData, 'PNG', 14, 30, pdfWidth, pdfHeight);
-                        chartHeight = pdfHeight + 10; // Add spacing
+                        doc.addImage(imgData, 'PNG', 14, currentY, pdfWidth, pdfHeight);
+                        currentY += pdfHeight + 10;
                     } catch (e) {
                         console.error("Chart capture failed", e);
+                        doc.setFontSize(9);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text("(Chart capture failed - see console for details)", 14, currentY);
+                        currentY += 8;
                     }
+                } else {
+                    console.warn(`[Export Debug] Chart element not found (${chartContainerId}). Likely in Table view.`);
+                    doc.setFontSize(9);
+                    doc.setTextColor(128, 128, 128); // Gray
+                    doc.text("(Chart not included. Switch to a Chart view to capture it.)", 14, currentY);
+                    currentY += 8;
                 }
             }
 
-            // 2. Add Data Table
-            // Adjust startY based on chart height
-            const startY = 30 + chartHeight;
+            // 2. Add AI Reports
+            const pageWidth = doc.internal.pageSize.getWidth() - 28;
 
-            // Check if table needs new page
-            if (startY > doc.internal.pageSize.getHeight() - 40) {
-                doc.addPage();
-                autoTable(doc, {
-                    head: [headers],
-                    body: rows,
-                    startY: 20,
-                    styles: { fontSize: 8 },
-                    theme: 'grid'
-                });
-            } else {
-                autoTable(doc, {
-                    head: [headers],
-                    body: rows,
-                    startY: startY,
-                    styles: { fontSize: 8 },
-                    theme: 'grid'
-                });
+            if (msg?.aiReport) {
+                if (currentY > doc.internal.pageSize.getHeight() - 40) { doc.addPage(); currentY = 20; }
+
+                doc.setFontSize(12);
+                doc.setTextColor(0, 150, 136); // Teal color
+                doc.text("AI-Intelligence Report", 14, currentY);
+                currentY += 7;
+
+                doc.setFontSize(10);
+                doc.setTextColor(50, 50, 50);
+                const splitText = doc.splitTextToSize(msg.aiReport, pageWidth);
+                doc.text(splitText, 14, currentY);
+                currentY += (splitText.length * 5) + 10;
             }
+
+            if (msg?.operationalImprovement) {
+                if (currentY > doc.internal.pageSize.getHeight() - 40) { doc.addPage(); currentY = 20; }
+
+                doc.setFontSize(12);
+                doc.setTextColor(46, 125, 50); // Green color
+                doc.text("Suggested Operational Improvement", 14, currentY);
+                currentY += 7;
+
+                doc.setFontSize(10);
+                doc.setTextColor(50, 50, 50);
+                const splitText = doc.splitTextToSize(msg.operationalImprovement, pageWidth);
+                doc.text(splitText, 14, currentY);
+                currentY += (splitText.length * 5) + 10;
+            }
+
+            // 3. Add Data Table
+            doc.setTextColor(0, 0, 0); // Reset color
+            if (currentY > doc.internal.pageSize.getHeight() - 40) {
+                doc.addPage();
+                currentY = 20;
+            }
+
+            autoTable(doc, {
+                head: [headers],
+                body: rows,
+                startY: currentY,
+                styles: { fontSize: 8 },
+                theme: 'grid'
+            });
 
             console.log("Saving PDF as", filename);
             doc.save(`${filename}.pdf`);
@@ -474,7 +564,7 @@ const Chatbot = () => {
         }
     };
 
-    const handleExport = async (type, data, chartId) => {
+    const handleExport = async (type, data, chartId, msg) => {
         console.log(`[Export Debug] Type: ${type}, ChartID: ${chartId}, Data Length: ${data ? data.length : 0}`);
         try {
             alert(`Starting ${type} export...`); // Debug Alert
@@ -487,7 +577,7 @@ const Chatbot = () => {
             }
             if (type === 'pdf') {
                 console.log("[Export Debug] Calling exportToPDF...");
-                await exportToPDF(data, filename, chartId);
+                await exportToPDF(data, filename, chartId, msg);
             }
         } catch (error) {
             console.error("[Export Debug] Export failed:", error);
@@ -535,7 +625,22 @@ const Chatbot = () => {
                             </div>
                         )}
                         {msg.content && <div className="content" style={{ marginBottom: msg.data ? '8px' : '0' }}>{msg.content}</div>}
-                        {msg.data && <ChartRenderer data={msg.data} id={`chart-${idx}`} onExport={handleExport} />}
+
+                        {msg.aiReport && (
+                            <div className="ai-report-section" style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(0, 229, 255, 0.05)', borderRadius: '8px', borderLeft: '3px solid #00e5ff' }}>
+                                <h4 style={{ margin: '0 0 5px 0', color: '#00e5ff', fontSize: '0.9rem' }}>AI-Intelligence Report</h4>
+                                <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>{msg.aiReport}</p>
+                            </div>
+                        )}
+
+                        {msg.operationalImprovement && (
+                            <div className="operational-improvement-section" style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(0, 255, 157, 0.05)', borderRadius: '8px', borderLeft: '3px solid #00ff9d' }}>
+                                <h4 style={{ margin: '0 0 5px 0', color: '#00ff9d', fontSize: '0.9rem' }}>Suggested Operational Improvement</h4>
+                                <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>{msg.operationalImprovement}</p>
+                            </div>
+                        )}
+
+                        {msg.data && <ChartRenderer data={msg.data} id={`chart-${idx}`} onExport={(type, data, id) => handleExport(type, data, id, msg)} />}
                     </div>
                 ))}
                 {loading && (

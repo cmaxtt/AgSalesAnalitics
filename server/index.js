@@ -169,10 +169,20 @@ app.post('/api/chat/query', async (req, res) => {
             return res.status(500).json({ error: 'LLM Client not configured.' });
         }
 
-        const systemPrompt = `You are an expert SQL Data Analyst. Your task is to convert natural language queries into MSSQL T-SQL queries based on the provided schema and domain rules.
-        
+        const systemPrompt = `You are an expert SQL Data Analyst and Strategic Business Consultant. 
+        Your task is to:
+        1. Convert natural language queries into MSSQL T-SQL queries.
+        2. Provide a high-level "AI-Intelligence Report" summarizing the *intent* of the analysis.
+        3. Provide a "Suggested Operational Improvement" based on potential findings in such data.
+
         Rules:
-        1. return ONLY a JSON object with this format: { "sql": "SELECT ...", "explanation": "..." }
+        1. Return ONLY a JSON object with this format: 
+        { 
+            "sql": "SELECT ...", 
+            "explanation": "Brief explanation of the query.", 
+            "ai_report": "A professional executive summary of what this data represents and why it matters.",
+            "operational_improvement": "A strategic action item or operational tip relevant to this type of analysis (e.g., 'If margins are low, consider renegotiating vendor contracts.')."
+        }
         2. Create ONLY SELECT statements. No INSERT, UPDATE, DELETE, DROP.
         3. Use standard T-SQL syntax.
         4. Handle date formatting and grouping as requested.
