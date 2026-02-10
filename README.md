@@ -42,6 +42,7 @@ A modern, interactive Sales Analytics web application designed to connect to SQL
 - **Node.js**: (v18 or higher)
 - **Python 3.x**: For the CLI tool.
 - **SQL Server**: Access to a local or remote instance.
+- **MCP Server (MSSQL)**: A running Model Context Protocol server. The setup script will attempt to install this for you automatically. **This is required for the app to function properly.**
 
 ### Installation & Quick Start (Windows)
 
@@ -55,9 +56,11 @@ A modern, interactive Sales Analytics web application designed to connect to SQL
 
 ### Manual Setup
 
-1. **Frontend**: Run `npm install` and `npm run dev` in the root.
+1. **Frontend**: Run `npm install` and `npm run dev` in the root. This will automatically set up the MCP server if missing.
 2. **Backend**: Run `npm install` and `node index.js` inside the `server` directory.
-3. **CLI Tool**: Run `pip install -r cashier_cli/requirements.txt`.
+   - Note: The main `npm run dev` handles backend setup too.
+3. **MCP Server**: The `setup:mcp` script will clone and set up the MCP server at `c:\AI-MCP\mssql_mcp_server`. Make sure to configure the `.env` file in that directory with your database credentials if automatic setup doesn't cover everything.
+4. **CLI Tool**: Run `pip install -r cashier_cli/requirements.txt`.
 
 ## Usage - Cashier Flash Report
 
