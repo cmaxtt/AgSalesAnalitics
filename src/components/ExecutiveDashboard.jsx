@@ -30,7 +30,7 @@ const ExecutiveDashboard = () => {
     const handleRunAnalysis = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3030/api/reports/cashier-flash', {
+            const response = await fetch('http://localhost:5051/api/reports/cashier-flash', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ startDate: dateRange.start, endDate: dateRange.end })

@@ -19,7 +19,7 @@ const Dashboard = () => {
     React.useEffect(() => {
         const checkStatus = async () => {
             try {
-                const res = await fetch('http://localhost:3030/api/connection-status');
+                const res = await fetch('http://localhost:5051/api/connection-status');
                 const data = await res.json();
                 if (data.connected) {
                     setIsConnected(true);

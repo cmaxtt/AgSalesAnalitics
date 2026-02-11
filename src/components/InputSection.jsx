@@ -29,7 +29,7 @@ const InputSection = ({ onAnalyze }) => {
         if (method === 'sql') {
             try {
                 // 1. Validate Connection
-                const res = await fetch('http://localhost:3030/api/connect', {
+                const res = await fetch('http://localhost:5051/api/connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -43,7 +43,7 @@ const InputSection = ({ onAnalyze }) => {
                     alert('Connection Failed: ' + data.error);
                 }
             } catch (err) {
-                alert('Server Error. Ensure backend is running directly on port 3030.');
+                alert('Server Error. Ensure backend is running directly on port 5051.');
             }
         } else {
             // File mode simulation remains for now

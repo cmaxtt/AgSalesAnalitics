@@ -24,7 +24,7 @@ const SettingsModal = ({ isOpen, onClose, onConnect }) => {
         setStatus({ type: '', message: '' });
 
         try {
-            const res = await fetch('http://localhost:3030/api/connect', {
+            const res = await fetch('http://localhost:5051/api/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config)

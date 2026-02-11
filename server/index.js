@@ -10,7 +10,7 @@ const { validateTable } = require('./utils/validation');
 const { domainContext } = require('./utils/domainContext');
 
 const app = express();
-const PORT = 3030;
+const PORT = process.env.PORT || 5051;
 
 // Security Middleware
 app.use(helmet());

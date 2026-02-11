@@ -293,7 +293,7 @@ const Chatbot = () => {
 
     const fetchFavorites = async () => {
         try {
-            const res = await fetch('http://localhost:3030/api/chat/favorites');
+            const res = await fetch('http://localhost:5051/api/chat/favorites');
             if (res.ok) {
                 const data = await res.json();
                 setFavorites(data);
@@ -309,7 +309,7 @@ const Chatbot = () => {
         if (note === null) return;
 
         try {
-            const res = await fetch('http://localhost:3030/api/chat/favorite', {
+            const res = await fetch('http://localhost:5051/api/chat/favorite', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -333,7 +333,7 @@ const Chatbot = () => {
         e.stopPropagation();
         if (!confirm("Delete this favorite?")) return;
         try {
-            await fetch(`http://localhost:3030/api/chat/favorite/${id}`, { method: 'DELETE' });
+            await fetch(`http://localhost:5051/api/chat/favorite/${id}`, { method: 'DELETE' });
             fetchFavorites();
         } catch (error) {
             console.error("Failed to delete favorite", error);
@@ -348,7 +348,7 @@ const Chatbot = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3030/api/chat/query', {
+            const response = await fetch('http://localhost:5051/api/chat/query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userPrompt: queryText })
@@ -401,7 +401,7 @@ const Chatbot = () => {
             /* TEMPORARY DISABLE AI NAMING TO DEBUG HANG
             const lastUserMsg = currentMessages ? [...currentMessages].reverse().find(m => m.type === 'user') : null;
             if (lastUserMsg) {
-                const res = await fetch('http://localhost:3030/api/chat/suggest-name', {
+                const res = await fetch('http://localhost:5051/api/chat/suggest-name', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: lastUserMsg.content })

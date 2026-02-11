@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "setup:mcp": "node scripts/setup_mcp.js",
+    "postinstall": "npm run setup:mcp",
     "predev": "npm run setup:mcp",
     "dev": "concurrently \"npm:dev:frontend\" \"npm:dev:backend\" \"npm:dev:mcp\"",
     "dev:frontend": "vite",
