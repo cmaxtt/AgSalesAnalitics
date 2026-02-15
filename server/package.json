@@ -2,6 +2,7 @@
   "name": "sales-app-backend",
   "version": "1.0.0",
   "description": "Backend for Pastel Insights Sales App",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
